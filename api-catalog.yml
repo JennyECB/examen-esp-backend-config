@@ -18,3 +18,49 @@ spring:
         database: test
         port: 27017
 
+resilience4j:
+  retry:
+    configs:
+      default:
+        max-retry-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+      instances:
+        retrySerieServiceClient:
+          base-config: default
+          max-retry-attempts: 5
+          wait-duration: 2s
+          retry-exceptions:
+            - java.net.ConnectException
+        retryMovieServiceClient:
+          base-config: default
+          max-retry-attempts: 5
+          wait-duration: 2s
+          retry-exceptions:
+            - java.net.ConnectException
+  circuit-breaker:
+    configs:
+      default:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 30s
+        automatic-transition-from-open-to-half-open-enabled: true
+        failure-rate-threshold: 50
+    instances:
+      serieServiceClient:
+        base-config: default
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 5
+        wait-duration-in-open-state: 1m
+        failure-rate-threshold: 20
+      movieServiceClient:
+        base-config: default
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 5
+        wait-duration-in-open-state: 1m
+        failure-rate-threshold: 20
+
